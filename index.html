@@ -15,12 +15,14 @@
             --text-main: #f8fafc;
             --text-dim: #94a3b8;
             --grid-border: #1e293b;
-            --cell-border: #334155;
+            --cell-border: #334155; /* Border tegas untuk navigasi visual */
             --path-color: #38bdf8;
             --core-y: #fbbf24; 
             --core-r: #f87171; 
             --core-p: #a78bfa; 
             --core-g: #4ade80; 
+            --core-b: #60a5fa;
+            --accent: #38bdf8;
         }
 
         .light-mode {
@@ -30,8 +32,19 @@
             --text-main: #0f172a;
             --text-dim: #64748b;
             --grid-border: #e2e8f0;
-            --cell-border: #cbd5e1;
+            --cell-border: #cbd5e1; /* Border untuk Light Mode */
             --path-color: #0284c7;
+            --accent: #0284c7;
+        }
+
+        /* Singularity Mode Styling (Red/Purple Theme) */
+        body.singularity-mode {
+            --bg-body: #05010a;
+            --bg-card: #10021a;
+            --bg-cell: #10021a;
+            --grid-border: #2e104a;
+            --cell-border: #2e104a;
+            --accent: #ef4444;
         }
 
         body {
@@ -40,7 +53,7 @@
             font-family: 'Inter', sans-serif;
             touch-action: none;
             overflow-x: hidden;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             -webkit-font-smoothing: antialiased;
         }
 
@@ -87,12 +100,14 @@
         .core-r { background-color: var(--core-r); box-shadow: 0 0 15px var(--core-r); }
         .core-p { background-color: var(--core-p); box-shadow: 0 0 15px var(--core-p); }
         .core-g { background-color: var(--core-g); box-shadow: 0 0 15px var(--core-g); }
+        .core-b { background-color: var(--core-b); box-shadow: 0 0 15px var(--core-b); }
 
         .region-overlay { position: absolute; inset: 0; opacity: 0.2; pointer-events: none; transition: opacity 0.5s ease; }
         .region-0 { background-color: #fbbf24; }
         .region-1 { background-color: #f87171; }
         .region-2 { background-color: #a78bfa; }
         .region-3 { background-color: #4ade80; }
+        .region-4 { background-color: #60a5fa; }
 
         .win-state { animation: success-pulse 2s infinite ease-in-out; }
         @keyframes success-pulse {
@@ -100,7 +115,6 @@
             50% { filter: brightness(1.2); transform: scale(1.01); }
         }
 
-        /* Modal Styles */
         .modal {
             position: fixed;
             inset: 0;
@@ -113,22 +127,33 @@
             padding: 20px;
         }
 
-        .daily-badge {
-            background: linear-gradient(135deg, #0ea5e9, #6366f1);
-            padding: 2px 12px;
+        /* Mode Badges */
+        .mode-badge {
+            cursor: pointer;
+            padding: 3px 14px;
             border-radius: 9999px;
             font-size: 10px;
-            font-weight: 800;
+            font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.12em;
             color: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+        }
+        .mode-badge.daily {
+            background: linear-gradient(135deg, #0ea5e9, #6366f1);
             box-shadow: 0 4px 12px -2px rgba(99, 102, 241, 0.4);
         }
+        .mode-badge.singularity {
+            background: linear-gradient(135deg, #ef4444, #7f1d1d);
+            box-shadow: 0 4px 12px -2px rgba(239, 68, 68, 0.4);
+        }
+        .mode-badge:hover { transform: translateY(-1px) scale(1.05); filter: brightness(1.1); }
         
         .timer-badge {
-            background: rgba(56, 189, 248, 0.1);
-            border: 1px solid rgba(56, 189, 248, 0.2);
-            color: #38bdf8;
+            background: rgba(148, 163, 184, 0.1);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: var(--text-main);
             padding: 2px 12px;
             border-radius: 9999px;
             font-family: 'JetBrains Mono', monospace;
@@ -155,6 +180,17 @@
             @apply p-1.5 rounded-lg hover:bg-slate-800 transition-all active:scale-90 disabled:opacity-20 disabled:pointer-events-none;
         }
 
+        /* Custom Calendar Grid */
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .cal-day {
+            aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+            border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.2s; font-weight: 600;
+        }
+        .cal-day:hover:not(.disabled) { background: var(--accent); color: white; }
+        .cal-day.active { background: var(--accent); color: white; box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); }
+        .cal-day.disabled { opacity: 0.15; cursor: not-allowed; }
+        .cal-day.today { border: 1px solid var(--accent); }
+
         .btn-base {
             @apply px-8 py-3.5 rounded-xl text-[11px] font-black uppercase tracking-[0.18em] transition-all active:scale-95 shadow-lg;
         }
@@ -163,30 +199,8 @@
         .btn-indigo { @apply btn-base bg-indigo-900/30 border border-indigo-500/50 text-indigo-400 hover:bg-indigo-900/50; }
         .btn-emerald { @apply btn-base bg-emerald-500 border border-emerald-400 text-white hover:bg-emerald-400; }
         
-        h1 { letter-spacing: -0.05em; }
-        .subtitle-text { letter-spacing: 0.18em; word-spacing: 0.1em; }
-
-        /* Custom Calendar Grid */
-        .cal-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-        }
-        .cal-day {
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-weight: 600;
-        }
-        .cal-day:hover:not(.disabled) { background: #38bdf820; color: #38bdf8; }
-        .cal-day.active { background: #38bdf8; color: #020617; box-shadow: 0 0 15px #38bdf860; }
-        .cal-day.disabled { opacity: 0.15; cursor: not-allowed; }
-        .cal-day.today { border: 1px solid #38bdf860; }
+        h1 { letter-spacing: -0.05em; transition: color 0.4s ease; }
+        .subtitle-text { letter-spacing: 0.18em; word-spacing: 0.1em; transition: opacity 0.4s ease; }
     </style>
 </head>
 <body class="p-4 flex flex-col items-center justify-start min-h-screen">
@@ -205,7 +219,8 @@
     <div class="max-w-md w-full text-center mb-10">
         <div class="flex flex-col items-center gap-5 mb-5">
             <div class="flex items-center justify-center gap-4">
-                <span class="daily-badge">Daily Flux</span>
+                <button id="mode-toggle-btn" onclick="toggleGameMode()" class="mode-badge daily">Daily Flux</button>
+                
                 <div class="archive-nav">
                     <button id="prev-day" onclick="changeDay(-1)" class="nav-btn" title="Previous Day">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
@@ -220,13 +235,14 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                     </button>
                 </div>
+
                 <span id="timer-display" class="timer-badge">00:00</span>
             </div>
         </div>
-        <h1 class="text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500 mb-4">
+        <h1 id="main-title" class="text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500 mb-4 tracking-tighter">
             AETHERIC FLUX
         </h1>
-        <p class="subtitle-text text-[10px] font-bold italic opacity-70 uppercase leading-relaxed text-center px-6">
+        <p id="subtitle" class="subtitle-text text-[10px] font-bold italic opacity-70 uppercase leading-relaxed text-center px-6">
             "One Matrix, One Harmony. Let's Synchronize Today's Mind."
         </p>
     </div>
@@ -253,21 +269,7 @@
         </div>
     </div>
 
-    <!-- Tutorial Modal -->
-    <div id="tutorial-modal" class="modal">
-        <div class="bg-slate-900 border border-slate-800 p-10 rounded-[2.5rem] max-w-sm w-full shadow-2xl text-center">
-            <h2 class="text-3xl font-black text-sky-400 mb-6 tracking-tighter uppercase text-center">HOW TO PLAY</h2>
-            <div class="space-y-5 text-slate-400 text-sm leading-relaxed text-left">
-                <p><span class="text-emerald-400 font-bold">1. Start & End:</span> Find the <span class="text-emerald-400">Green outline</span> and reach the <span class="text-pink-400">Pink outline</span>. They move every day!</p>
-                <p><span class="text-sky-400 font-bold">2. The Barrier:</span> Your blue path acts as a wall that divides the grid into regions.</p>
-                <p><span class="text-amber-400 font-bold">3. Harmony:</span> Each colored sphere must be isolated in its own separate room.</p>
-                <p><span class="text-rose-400 font-bold">4. Voids:</span> Black cells marked with <span class="text-rose-500">×</span> are impassable anomalies.</p>
-            </div>
-            <button onclick="toggleTutorial()" class="mt-10 w-full py-4 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] transition-all">Understood</button>
-        </div>
-    </div>
-
-    <!-- Calendar Modal -->
+    <!-- Modal Kalender -->
     <div id="calendar-modal" class="modal">
         <div class="bg-slate-900 border border-slate-700 p-6 rounded-[2rem] max-w-sm w-full shadow-2xl">
             <div class="flex justify-between items-center mb-6 px-2">
@@ -291,6 +293,20 @@
         </div>
     </div>
 
+    <!-- Modal Tutorial -->
+    <div id="tutorial-modal" class="modal">
+        <div class="bg-slate-900 border border-slate-700 p-10 rounded-[2.5rem] max-w-sm w-full shadow-2xl text-center">
+            <h2 class="text-3xl font-black text-sky-400 mb-6 tracking-tighter uppercase text-center">HOW TO PLAY</h2>
+            <div class="space-y-5 text-slate-400 text-sm leading-relaxed text-left">
+                <p><span class="text-emerald-400 font-bold">1. Start & End:</span> Find the <span class="text-emerald-400">Green outline</span> and reach the <span class="text-pink-400">Pink outline</span>. They move every day!</p>
+                <p><span class="text-sky-400 font-bold">2. The Barrier:</span> Your blue path acts as a wall that divides the grid into regions.</p>
+                <p><span class="text-amber-400 font-bold">3. Harmony:</span> Each colored sphere must be isolated in its own separate room.</p>
+                <p><span class="text-rose-400 font-bold">4. Voids:</span> Black cells marked with <span class="text-rose-500">×</span> are impassable anomalies.</p>
+            </div>
+            <button onclick="toggleTutorial()" class="mt-10 w-full py-4 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] transition-all">Understood</button>
+        </div>
+    </div>
+
     <script>
         // --- MEMORY ENGINE (Cache) ---
         const levelCache = {};
@@ -311,63 +327,77 @@
         }
         function stopTimer() { clearInterval(timerInterval); }
 
+        // --- THEME & MODE ENGINE ---
+        let currentMode = 'daily'; 
+
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('theme-icon');
+            body.classList.toggle('light-mode');
+            icon.innerHTML = body.classList.contains('light-mode') ? 
+                '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>' :
+                '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>';
+        }
+
+        function toggleGameMode() {
+            if (isComplete) return; 
+            currentMode = currentMode === 'daily' ? 'singularity' : 'daily';
+            const btn = document.getElementById('mode-toggle-btn');
+            const body = document.body;
+            const title = document.getElementById('main-title');
+            const subtitle = document.getElementById('subtitle');
+
+            if (currentMode === 'singularity') {
+                btn.innerText = 'Singularity Flux';
+                btn.className = 'mode-badge singularity';
+                body.classList.add('singularity-mode');
+                title.innerText = 'SINGULARITY';
+                title.className = 'text-6xl font-black bg-clip-text text-transparent bg-gradient-to-br from-red-500 via-purple-600 to-indigo-600 mb-4 tracking-tighter';
+                subtitle.innerText = '"Beyond Limits. Beyond Harmony. Face the Ultimate Flux."';
+            } else {
+                btn.innerText = 'Daily Flux';
+                btn.className = 'mode-badge daily';
+                body.classList.remove('singularity-mode');
+                title.innerText = 'AETHERIC FLUX';
+                title.className = 'text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500 mb-4 tracking-tighter';
+                subtitle.innerText = '"One Matrix, One Harmony. Let\'s Synchronize Today\'s Mind."';
+            }
+            initDaily();
+        }
+
         // --- ARCHIVE & CALENDAR LOGIC ---
         let viewDate = new Date();
-        let calViewDate = new Date(); // Internal calendar navigation date
+        let calViewDate = new Date();
         const launchDate = new Date("2026-03-22");
 
         function toggleCalendarModal() {
             const m = document.getElementById('calendar-modal');
             const isOpening = m.style.display !== 'flex';
             m.style.display = isOpening ? 'flex' : 'none';
-            if (isOpening) {
-                calViewDate = new Date(viewDate);
-                renderCalendar();
-            }
+            if (isOpening) { calViewDate = new Date(viewDate); renderCalendar(); }
         }
 
-        function navCalendar(offset) {
-            calViewDate.setMonth(calViewDate.getMonth() + offset);
-            renderCalendar();
-        }
+        function navCalendar(offset) { calViewDate.setMonth(calViewDate.getMonth() + offset); renderCalendar(); }
 
         function renderCalendar() {
             const container = document.getElementById('cal-days');
             const title = document.getElementById('cal-month-year');
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            
             title.innerText = `${monthNames[calViewDate.getMonth()]} ${calViewDate.getFullYear()}`;
             container.innerHTML = '';
-
             const firstDay = new Date(calViewDate.getFullYear(), calViewDate.getMonth(), 1).getDay();
             const daysInMonth = new Date(calViewDate.getFullYear(), calViewDate.getMonth() + 1, 0).getDate();
-            
-            const today = new Date();
-            today.setHours(0,0,0,0);
-
-            // Add padding for start of month
-            for (let i = 0; i < firstDay; i++) {
-                container.innerHTML += `<div class="cal-day disabled"></div>`;
-            }
-
+            const today = new Date(); today.setHours(0,0,0,0);
+            for (let i = 0; i < firstDay; i++) container.innerHTML += `<div class="cal-day disabled"></div>`;
             for (let d = 1; d <= daysInMonth; d++) {
                 const dateObj = new Date(calViewDate.getFullYear(), calViewDate.getMonth(), d);
-                const isBeforeLaunch = dateObj < launchDate;
-                const isFuture = dateObj > today;
-                const isDisabled = isBeforeLaunch || isFuture;
+                const isDisabled = dateObj < launchDate || dateObj > today;
                 const isActive = dateObj.toDateString() === viewDate.toDateString();
-                const isToday = dateObj.toDateString() === today.toDateString();
-                
                 const dayEl = document.createElement('div');
-                dayEl.className = `cal-day ${isDisabled ? 'disabled' : ''} ${isActive ? 'active' : ''} ${isToday ? 'today' : ''}`;
+                dayEl.className = `cal-day ${isDisabled ? 'disabled' : ''} ${isActive ? 'active' : ''}`;
                 dayEl.innerText = d;
-                
                 if (!isDisabled) {
-                    dayEl.onclick = () => {
-                        viewDate = dateObj;
-                        toggleCalendarModal();
-                        initDaily();
-                    };
+                    dayEl.onclick = () => { viewDate = dateObj; toggleCalendarModal(); initDaily(); };
                 }
                 container.appendChild(dayEl);
             }
@@ -376,22 +406,8 @@
         function changeDay(offset) {
             const newDate = new Date(viewDate);
             newDate.setDate(newDate.getDate() + offset);
-            const today = new Date();
-            today.setHours(23, 59, 59, 999);
-            if (newDate <= today && newDate >= launchDate) {
-                viewDate = newDate;
-                initDaily();
-            }
-        }
-
-        // --- THEME ENGINE ---
-        function toggleTheme() {
-            const body = document.body;
-            const icon = document.getElementById('theme-icon');
-            body.classList.toggle('light-mode');
-            icon.innerHTML = body.classList.contains('light-mode') ? 
-                '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>' :
-                '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>';
+            const today = new Date(); today.setHours(23, 59, 59, 999);
+            if (newDate <= today && newDate >= launchDate) { viewDate = newDate; initDaily(); }
         }
 
         // --- SEEDED RANDOM ENGINE ---
@@ -415,7 +431,7 @@
             return parseInt(`${y}${m}${d}`);
         }
 
-        // --- GLOBAL STATE ---
+        // --- GLOBAL GAME STATE ---
         let seededRand;
         let currentLevelData = null;
         let userPath = [];
@@ -429,7 +445,7 @@
         const shareBtn = document.getElementById('share-btn');
         const resetBtn = document.getElementById('reset-btn');
 
-        // --- ORION SOLVER ---
+        // --- ORION SOLVER (Verification) ---
         function solve(size, start, end, cores, voids) {
             const startC = start.split('.').map(Number), endC = end.split('.').map(Number);
             const voidSet = new Set(voids), coreSet = new Set(cores.map(c => c.pos)), visited = new Set();
@@ -474,13 +490,16 @@
             return solutionPath;
         }
 
-        function generateDaily() {
+        function generateLevel() {
             const seedNum = getSeedForDate(viewDate);
-            // Return from memory if available for speed
-            if (levelCache[seedNum]) return levelCache[seedNum];
+            const cacheKey = `${seedNum}_${currentMode}`;
+            if (levelCache[cacheKey]) return levelCache[cacheKey];
 
-            const size = 6 + (viewDate.getDate() % 3);
-            const coreTypes = ['y', 'r', 'p', 'g'];
+            const size = currentMode === 'daily' ? 6 + (viewDate.getDate() % 3) : 10;
+            const numCores = currentMode === 'daily' ? 3 + (viewDate.getDate() % 2) : 5;
+            const numVoids = currentMode === 'daily' ? 2 + (viewDate.getDate() % 3) : 8;
+            const coreTypes = ['y', 'r', 'p', 'g', 'b'];
+
             while (true) {
                 let startR, startC, endR, endC;
                 do {
@@ -488,37 +507,43 @@
                     startC = Math.floor(seededRand() * size) + 1;
                     endR = Math.floor(seededRand() * size) + 1;
                     endC = Math.floor(seededRand() * size) + 1;
-                } while (Math.abs(startR - endR) + Math.abs(startC - endC) < 4);
+                } while (Math.abs(startR - endR) + Math.abs(startC - endC) < (currentMode === 'daily' ? 4 : 8));
 
                 const start = `${startR}.${startC}`, end = `${endR}.${endC}`;
                 const cores = [], voids = [], occ = new Set([start, end]);
-                const maxV = 2 + (viewDate.getDate() % 3);
-                while (voids.length < maxV) {
+                [[0,1],[1,0],[0,-1],[-1,0]].forEach(d => {
+                    occ.add(`${startR+d[0]}.${startC+d[1]}`);
+                    occ.add(`${endR+d[0]}.${endC+d[1]}`);
+                });
+
+                while (voids.length < numVoids) {
                     const r = Math.floor(seededRand()*size)+1, c = Math.floor(seededRand()*size)+1, id = `${r}.${c}`;
                     if (!occ.has(id)) { voids.push(id); occ.add(id); }
                 }
-                const numCores = 3 + (viewDate.getDate() % 2);
+                
                 let cAt = 0;
-                while (cores.length < numCores && cAt < 300) {
+                while (cores.length < numCores && cAt < 500) {
                     cAt++;
                     const r = Math.floor(seededRand()*size)+1, c = Math.floor(seededRand()*size)+1, id = `${r}.${c}`;
                     const qConf = cores.some(ex => { const [er, ec] = ex.pos.split('.').map(Number); return er === r || ec === c; });
                     const dConf = cores.some(ex => { const [er, ec] = ex.pos.split('.').map(Number); return Math.abs(er-r) === 1 && Math.abs(ec-c) === 1; });
-                    if (!occ.has(id) && !qConf && !dConf) { cores.push({id: coreTypes[cores.length%4], pos: id}); occ.add(id); }
+                    if (!occ.has(id) && !qConf && !dConf) { cores.push({id: coreTypes[cores.length%5], pos: id}); occ.add(id); }
                 }
+
                 if (cores.length < numCores) continue;
                 const sol = solve(size, start, end, cores, voids);
                 if (sol) {
                     const data = { size, start, end, cores, voids, solution: sol };
-                    levelCache[seedNum] = data; // Store in memory
+                    levelCache[cacheKey] = data;
                     return data;
                 }
             }
         }
 
+        // --- UI LOGIC ---
         function initDaily() {
             seededRand = mulberry32(getSeedForDate(viewDate));
-            currentLevelData = generateDaily();
+            currentLevelData = generateLevel();
             userPath = []; isDrawing = false; isComplete = false; clueCount = 3;
             clueBtn.innerText = `Clue (3/3)`; clueBtn.disabled = false; clueBtn.classList.remove('opacity-50', 'hidden');
             resetBtn.classList.remove('hidden'); shareBtn.classList.add('hidden');
@@ -548,7 +573,7 @@
                 const touch = e.touches[0], target = document.elementFromPoint(touch.clientX, touch.clientY);
                 if (target && target.dataset.id) handleMove(target.dataset.id);
             }, {passive: false});
-            updateMsg(`Medium calibrated. Trace the flow between outlines.`);
+            updateMsg(currentMode === 'daily' ? 'Medium calibrated. Trace the flow.' : 'SINGULARITY DETECTED. PRECISION REQUIRED.');
             startTimer();
         }
 
@@ -587,7 +612,7 @@
                             currentReg.push(curr);
                             [[0,1],[0,-1],[1,0],[-1,0]].forEach(([dr, dc]) => {
                                 const nr = cr+dr, nc = cc+dc, nid = `${nr}.${nc}`;
-                                if (nr >= 1 && nr <= currentLevelData.size && nc >= 1 && nc <= currentLevelData.size && !pathSet.has(nid) && !voidSet.has(nid) && !visited.has(nid)) {
+                                if (nr >= 1 && nr <= currentLevelData.size && nc >= 1 && nc <= currentLevelData.size && !pathSet.has(nid) && !voidSet.has(nid) && !regVisited.has(nid)) {
                                     visited.add(nid); stack.push(nid);
                                 }
                             });
@@ -605,16 +630,16 @@
                 clueBtn.classList.add('hidden'); resetBtn.classList.add('hidden'); shareBtn.classList.remove('hidden');
                 regions.forEach((reg, idx) => { reg.forEach(id => {
                     const cell = document.querySelector(`.cell[data-id="${id}"]`), div = document.createElement('div');
-                    div.className = `region-overlay region-${idx % 4}`; cell.appendChild(div);
+                    div.className = `region-overlay region-${idx % 5}`; cell.appendChild(div);
                 }); });
-            } else { updateMsg("Partition failed. Re-evaluate the rooms.", "text-rose-400"); }
+            } else { updateMsg("Partition failed. Check the rooms.", "text-rose-400"); }
         }
 
         function shareResults() {
             const date = document.getElementById('date-display').innerText;
             const duration = document.getElementById('timer-display').innerText;
-            const size = currentLevelData.size;
-            const text = `Aetheric Flux - ${date}\nSynchronized in ${duration} (${size}x${size})\n#AethericFlux`;
+            const mode = currentMode.toUpperCase();
+            const text = `Aetheric Flux - ${mode}\nDate: ${date}\nSynchronized in ${duration}\n#AethericFlux`;
             const textArea = document.createElement("textarea"); textArea.value = text; document.body.appendChild(textArea); textArea.select();
             try { document.execCommand('copy'); updateMsg("COPIED TO CLIPBOARD!", "text-emerald-400"); } catch (err) { updateMsg("COPY FAILED.", "text-rose-400"); }
             document.body.removeChild(textArea);
@@ -625,12 +650,12 @@
             if (clueCount <= 0 || isComplete) return;
             clueCount--; clueBtn.innerText = `Clue (${clueCount}/3)`;
             if (clueCount === 0) { clueBtn.disabled = true; clueBtn.classList.add('opacity-50'); }
-            if (clueCount === 2) updateMsg(`Identify the Start (Green) and End (Pink) outlines.`, "text-indigo-400");
-            else if (clueCount === 1) updateMsg(`Goal: Exactly ${currentLevelData.cores.length} isolated regions.`, "text-indigo-400");
-            else updateMsg(`Trace carefully. Use the gaps between spheres.`, "text-indigo-400");
+            if (clueCount === 2) updateMsg(`Goal: Create exactly ${currentLevelData.cores.length} isolated regions.`, "text-indigo-400");
+            else if (clueCount === 1) updateMsg(`Instinct: The correct path crosses near the cores.`, "text-indigo-400");
+            else updateMsg(`Trace carefully. Use the outer grid edges if trapped.`, "text-indigo-400");
         }
         function resetCurrentPath() { if (isComplete) return; userPath = []; drawPath(); updateMsg(`RESTARTING CALIBRATION...`); }
-        function updateMsg(txt, cls = "") { msgEl.innerText = txt; msgEl.className = `px-10 py-5 rounded-3xl bg-slate-900 border border-slate-800 text-xs font-bold shadow-2xl min-w-[320px] text-center tracking-widest uppercase transition-all ${cls}`; }
+        function updateMsg(txt, cls = "") { msgEl.innerText = txt; msgEl.className = `px-10 py-4 rounded-3xl bg-slate-900 border border-slate-800 text-xs font-bold shadow-2xl min-w-[320px] text-center tracking-widest uppercase transition-all ${cls}`; }
 
         window.onload = () => { initDaily(); };
     </script>
