@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aetheric Flux - Daily Challenge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Mode Gelap (Default) */
+            --bg-body: #020617;
+            --bg-card: #0f172a;
+            --bg-cell: #1e293b;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --grid-border: #1e293b;
+            --path-color: #38bdf8;
+            --core-y: #fbbf24; 
+            --core-r: #f87171; 
+            --core-p: #a78bfa; 
+            --core-g: #4ade80; 
+        }
+
+        .light-mode {
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-cell: #f1f5f9;
+            --text-main: #0f172a;
+            --text-dim: #64748b;
+            --grid-border: #e2e8f0;
+            --path-color: #0284c7;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            touch-action: none;
+            overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .grid-container {
+            display: grid;
+            gap: 2px;
+            background-color: var(--grid-border);
+            padding: 4px;
+            border-radius: 12px;
+            user-select: none;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6);
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            background-color: var(--bg-cell);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            border-radius: 4px;
+        }
+
+        .coord-label {
+            font-size: 6px;
+            color: var(--text-dim);
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            pointer-events: none;
+            opacity: 0.4;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .cell.path {
+            background-color: var(--path-color);
+            box-shadow: inset 0 0 10px rgba(255,255,255,0.3), 0 0 15px var(--path-color);
+            z-index: 10;
+        }
+        .cell.path .coord-label { color: white; opacity: 0.8; }
+
+        .cell.start { border: 2px solid #4ade80; }
+        .cell.end { border: 2px solid #f472b6; }
+        
+        .cell.void { background-color: #000; pointer-events: none; opacity: 0.8; }
+        .cell.void::after { content: '×'; color: #ef4444; font-size: 14px; font-weight: bold; }
+
+        .core { width: 45%; height: 45%; border-radius: 50%; z-index: 5; }
+        .core-y { background-color: var(--core-y); box-shadow: 0 0 15px var(--core-y); }
+        .core-r { background-color: var(--core-r); box-shadow: 0 0 15px var(--core-r); }
+        .core-p { background-color: var(--core-p); box-shadow: 0 0 15px var(--core-p); }
+        .core-g { background-color: var(--core-g); box-shadow: 0 0 15px var(--core-g); }
+
+        .region-overlay { position: absolute; inset: 0; opacity: 0.2; pointer-events: none; transition: opacity 0.5s ease; }
+        .region-0 { background-color: #fbbf24; }
+        .region-1 { background-color: #f87171; }
+        .region-2 { background-color: #a78bfa; }
+        .region-3 { background-color: #4ade80; }
+
+        .win-state { animation: success-pulse 2s infinite ease-in-out; }
+        @keyframes success-pulse {
+            0%, 100% { filter: brightness(1); transform: scale(1); }
+            50% { filter: brightness(1.2); transform: scale(1.01); }
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.9);
+            backdrop-blur: 8px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .daily-badge {
+            background: linear-gradient(135deg, #0ea5e9, #6366f1);
+            padding: 2px 12px;
+            border-radius: 9999px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: white;
+            box-shadow: 0 4px 12px -2px rgba(99, 102, 241, 0.4);
+        }
+        
+        .timer-badge {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            color: #38bdf8;
+            padding: 2px 12px;
+            border-radius: 9999px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-base {
+            @apply px-8 py-3 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] transition-all active:scale-95 shadow-lg;
+        }
+
+        .btn-primary {
+            @apply btn-base bg-slate-800 border border-slate-700 text-white hover:bg-slate-700;
+        }
+
+        .btn-indigo {
+            @apply btn-base bg-indigo-900/30 border border-indigo-500/50 text-indigo-400 hover:bg-indigo-900/50;
+        }
+
+        .btn-emerald {
+            @apply btn-base bg-emerald-500 border border-emerald-400 text-white hover:bg-emerald-400;
+        }
+        
+        h1 {
+            letter-spacing: -0.05em;
+        }
+
+        .subtitle-text {
+            letter-spacing: 0.2em;
+            word-spacing: 0.1em;
+        }
+    </style>
+</head>
+<body class="p-4 flex flex-col items-center justify-start min-h-screen">
+
+    <!-- Top Navigation -->
+    <div class="max-w-5xl w-full flex justify-between items-center mb-4">
+        <button onclick="toggleTutorial()" class="p-2.5 rounded-xl bg-slate-800/50 border border-slate-700 hover:bg-slate-700 transition-all text-slate-300" title="How to Play">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </button>
+        <button onclick="toggleTheme()" class="p-2.5 rounded-xl bg-slate-800/50 border border-slate-700 hover:bg-slate-700 transition-all text-slate-300" title="Toggle Theme">
+            <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        </button>
+    </div>
+
+    <!-- Header Section -->
+    <div class="max-w-md w-full text-center mb-10">
+        <div class="flex items-center justify-center gap-3 mb-4">
+            <span class="daily-badge">Daily Flux</span>
+            <span id="date-display" class="text-slate-500 font-mono text-[11px] font-bold">--.--.----</span>
+            <span id="timer-display" class="timer-badge">00:00</span>
+        </div>
+        <h1 class="text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500 mb-3">
+            AETHERIC FLUX
+        </h1>
+        <p class="subtitle-text text-[10px] font-bold italic opacity-70 uppercase leading-relaxed text-center">
+            "One Matrix, One Harmony. Let's Synchronize Today's Mind."
+        </p>
+    </div>
+
+    <!-- Gameplay Area -->
+    <div id="game-grid" class="grid-container w-full max-w-[420px]"></div>
+
+    <!-- Message & Controls -->
+    <div class="mt-10 flex flex-col items-center w-full">
+        <div id="message" class="px-10 py-4 rounded-3xl bg-slate-900 border border-slate-800 text-xs font-bold text-slate-400 shadow-2xl min-w-[320px] text-center tracking-widest uppercase">
+            Calibrating Aetheric Medium...
+        </div>
+        
+        <div class="mt-10 flex flex-wrap justify-center gap-5">
+            <button id="reset-btn" onclick="resetCurrentPath()" class="btn-primary">
+                Reset Path
+            </button>
+            <button id="clue-btn" onclick="triggerClue()" class="btn-indigo">
+                Clue (3/3)
+            </button>
+            <button id="share-btn" onclick="shareResults()" class="btn-emerald hidden">
+                Share Results
+            </button>
+        </div>
+    </div>
+
+    <!-- Tutorial Modal -->
+    <div id="tutorial-modal" class="modal">
+        <div class="bg-slate-900 border border-slate-700 p-10 rounded-[2.5rem] max-w-sm w-full shadow-2xl text-center">
+            <h2 class="text-3xl font-black text-sky-400 mb-6 tracking-tighter uppercase">HOW TO PLAY</h2>
+            <div class="space-y-5 text-slate-400 text-sm leading-relaxed text-left">
+                <p><span class="text-emerald-400 font-bold">1. Start & End:</span> Drag a path from the <span class="text-emerald-400">Green cell (1.1)</span> to the <span class="text-pink-400">Pink cell</span>.</p>
+                <p><span class="text-sky-400 font-bold">2. The Barrier:</span> Your blue path acts as a wall that divides the grid into regions.</p>
+                <p><span class="text-amber-400 font-bold">3. Harmony:</span> Each colored sphere must be isolated in its own region. No two spheres can share the same space.</p>
+                <p><span class="text-rose-400 font-bold">4. Voids:</span> Black cells marked with <span class="text-rose-500">×</span> are impassable anomalies.</p>
+            </div>
+            <button onclick="toggleTutorial()" class="mt-10 w-full py-4 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] transition-all">Understood</button>
+        </div>
+    </div>
+
+    <script>
+        // --- CHRONOS ENGINE (Timer) ---
+        let pageEntryTime = Date.now();
+        let timerInterval;
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+        
+        function updateTimer() {
+            const diff = Math.floor((Date.now() - pageEntryTime) / 1000);
+            const m = Math.floor(diff / 60).toString().padStart(2, '0');
+            const s = (diff % 60).toString().padStart(2, '0');
+            document.getElementById('timer-display').innerText = `${m}:${s}`;
+        }
+        
+        function stopTimer() { clearInterval(timerInterval); }
+
+        // --- THEME ENGINE ---
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('theme-icon');
+            body.classList.toggle('light-mode');
+            icon.innerHTML = body.classList.contains('light-mode') ? 
+                '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>' :
+                '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>';
+        }
+
+        // --- SEEDED RANDOM ENGINE ---
+        function mulberry32(a) {
+            return function() {
+                let t = a += 0x6D2B79F5;
+                t = Math.imul(t ^ t >>> 15, t | 1);
+                t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+                return ((t ^ t >>> 14) >>> 0) / 4294967296;
+            }
+        }
+
+        function getDailySeed() {
+            const now = new Date();
+            const gmt7Offset = 7 * 60 * 60 * 1000;
+            const gmt7Date = new Date(now.getTime() + gmt7Offset);
+            const y = gmt7Date.getUTCFullYear(), m = String(gmt7Date.getUTCMonth() + 1).padStart(2, '0'), d = String(gmt7Date.getUTCDate()).padStart(2, '0');
+            document.getElementById('date-display').innerText = `${d}.${m}.${y}`;
+            return parseInt(`${y}${m}${d}`);
+        }
+
+        // --- GLOBAL STATE ---
+        let seededRand = mulberry32(getDailySeed());
+        let currentLevelData = null;
+        let userPath = [];
+        let isDrawing = false;
+        let isComplete = false;
+        let clueCount = 3;
+
+        const gridEl = document.getElementById('game-grid');
+        const msgEl = document.getElementById('message');
+        const clueBtn = document.getElementById('clue-btn');
+        const shareBtn = document.getElementById('share-btn');
+        const resetBtn = document.getElementById('reset-btn');
+
+        // --- ORION SOLVER (Logic Guard) ---
+        function solve(size, start, end, cores, voids) {
+            const startC = start.split('.').map(Number), endC = end.split('.').map(Number);
+            const voidSet = new Set(voids), coreSet = new Set(cores.map(c => c.pos)), visited = new Set();
+            let solutionPath = null;
+
+            function checkPartition(p) {
+                const pathSet = new Set(p), regVisited = new Set(), regions = [];
+                for (let r = 1; r <= size; r++) {
+                    for (let c = 1; c <= size; c++) {
+                        const id = `${r}.${c}`;
+                        if (!pathSet.has(id) && !voidSet.has(id) && !regVisited.has(id)) {
+                            const currentReg = [], stack = [id]; regVisited.add(id);
+                            while (stack.length > 0) {
+                                const curr = stack.pop(), [cr, cc] = curr.split('.').map(Number);
+                                currentReg.push(curr);
+                                [[0,1],[0,-1],[1,0],[-1,0]].forEach(([dr, dc]) => {
+                                    const nr = cr+dr, nc = cc+dc, nid = `${nr}.${nc}`;
+                                    if (nr >= 1 && nr <= size && nc >= 1 && nc <= size && !pathSet.has(nid) && !voidSet.has(nid) && !regVisited.has(nid)) {
+                                        regVisited.add(nid); stack.push(nid);
+                                    }
+                                });
+                            }
+                            regions.push(currentReg);
+                        }
+                    }
+                }
+                const dist = regions.map(reg => cores.filter(c => reg.includes(c.pos)));
+                return dist.every(d => d.length === 1) && regions.length >= cores.length;
+            }
+
+            function backtrack(r, c, currentP) {
+                if (solutionPath) return;
+                if (r === endC[0] && c === endC[1]) { if (checkPartition(currentP)) solutionPath = [...currentP]; return; }
+                const dirs = [[0,1],[1,0],[0,-1],[-1,0]].sort(() => seededRand() - 0.5);
+                for (let [dr, dc] of dirs) {
+                    const nr = r+dr, nc = c+dc, nid = `${nr}.${nc}`;
+                    if (nr >= 1 && nr <= size && nc >= 1 && nc <= size && !visited.has(nid) && !voidSet.has(nid) && !coreSet.has(nid)) {
+                        visited.add(nid); currentP.push(nid); backtrack(nr, nc, currentP); if (solutionPath) return;
+                        currentP.pop(); visited.delete(nid);
+                    }
+                }
+            }
+            visited.add(start); backtrack(startC[0], startC[1], [start]);
+            return solutionPath;
+        }
+
+        // --- DAILY GENERATOR ---
+        function generateDaily() {
+            const dayOfMonth = new Date().getDate();
+            const size = 6 + (dayOfMonth % 3);
+            const start = "1.1", end = `${size}.${size}`, numCores = 3 + (dayOfMonth % 2), coreTypes = ['y', 'r', 'p', 'g'];
+            while (true) {
+                const cores = [], voids = [], occ = new Set([start, end, "1.2", "2.1", `${size-1}.${size}`, `${size}.${size-1}`]);
+                const maxV = 2 + (dayOfMonth % 3);
+                while (voids.length < maxV) {
+                    const r = Math.floor(seededRand()*size)+1, c = Math.floor(seededRand()*size)+1, id = `${r}.${c}`;
+                    if (!occ.has(id)) { voids.push(id); occ.add(id); }
+                }
+                let cAt = 0;
+                while (cores.length < numCores && cAt < 200) {
+                    cAt++;
+                    const r = Math.floor(seededRand()*size)+1, c = Math.floor(seededRand()*size)+1, id = `${r}.${c}`;
+                    const qConf = cores.some(ex => { const [er, ec] = ex.pos.split('.').map(Number); return er === r || ec === c; });
+                    const dConf = cores.some(ex => { const [er, ec] = ex.pos.split('.').map(Number); return Math.abs(er-r) === 1 && Math.abs(ec-c) === 1; });
+                    if (!occ.has(id) && !qConf && !dConf) { cores.push({id: coreTypes[cores.length%4], pos: id}); occ.add(id); }
+                }
+                if (cores.length < numCores) continue;
+                const sol = solve(size, start, end, cores, voids);
+                if (sol) return { size, start, end, cores, voids, solution: sol };
+            }
+        }
+
+        // --- UI LOGIC ---
+        function initDaily() {
+            currentLevelData = generateDaily();
+            userPath = []; isDrawing = false; isComplete = false; clueCount = 3;
+            clueBtn.innerText = `Clue (3/3)`; clueBtn.disabled = false; clueBtn.classList.remove('opacity-50', 'hidden');
+            resetBtn.classList.remove('hidden');
+            shareBtn.classList.add('hidden');
+            gridEl.style.gridTemplateColumns = `repeat(${currentLevelData.size}, 1fr)`;
+            gridEl.innerHTML = ''; gridEl.classList.remove('win-state');
+            
+            for (let r = 1; r <= currentLevelData.size; r++) {
+                for (let c = 1; c <= currentLevelData.size; c++) {
+                    const id = `${r}.${c}`, cell = document.createElement('div');
+                    cell.className = 'cell'; cell.dataset.id = id;
+                    cell.innerHTML = `<span class="coord-label">${id}</span>`;
+                    if (id === currentLevelData.start) cell.classList.add('start');
+                    if (id === currentLevelData.end) cell.classList.add('end');
+                    if (currentLevelData.voids.includes(id)) cell.classList.add('void');
+                    const core = currentLevelData.cores.find(item => item.pos === id);
+                    if (core) {
+                        const div = document.createElement('div');
+                        div.className = `core core-${core.id}`; div.id = `core-${id}`;
+                        cell.appendChild(div);
+                    }
+                    cell.addEventListener('mousedown', () => handleStart(id));
+                    cell.addEventListener('mouseenter', () => handleMove(id));
+                    cell.addEventListener('touchstart', (e) => { e.preventDefault(); handleStart(id); }, {passive: false});
+                    gridEl.appendChild(cell);
+                }
+            }
+            gridEl.addEventListener('touchmove', (e) => {
+                if (!isDrawing) return;
+                const touch = e.touches[0], target = document.elementFromPoint(touch.clientX, touch.clientY);
+                if (target && target.dataset.id) handleMove(target.dataset.id);
+            }, {passive: false});
+            updateMsg(`Initialization complete. Start from ${currentLevelData.start}...`);
+            startTimer();
+        }
+
+        function handleStart(id) { if (isComplete || id !== currentLevelData.start) return; isDrawing = true; userPath = [id]; drawPath(); }
+        function handleMove(id) {
+            if (!isDrawing || isComplete || currentLevelData.voids.includes(id)) return;
+            const last = userPath[userPath.length - 1]; if (last === id) return;
+            const [r1, c1] = last.split('.').map(Number), [r2, c2] = id.split('.').map(Number);
+            if (Math.abs(r1-r2) + Math.abs(c1-c2) === 1) {
+                if (userPath.length > 1 && userPath[userPath.length-2] === id) userPath.pop();
+                else if (!userPath.includes(id)) userPath.push(id);
+                drawPath();
+            }
+        }
+
+        window.addEventListener('mouseup', () => { if(isDrawing) { isDrawing = false; validate(); } });
+        window.addEventListener('touchend', () => { if(isDrawing) { isDrawing = false; validate(); } });
+
+        function drawPath() {
+            document.querySelectorAll('.cell').forEach(c => {
+                c.classList.toggle('path', userPath.includes(c.dataset.id));
+                const overlay = c.querySelector('.region-overlay'); if (overlay) overlay.remove();
+            });
+        }
+
+        function validate() {
+            if (userPath[userPath.length-1] !== currentLevelData.end) { updateMsg("Circuit broken. Reach the target.", "text-rose-400"); return; }
+            if (currentLevelData.cores.some(c => userPath.includes(c.pos))) { updateMsg("Anomaly! Do not cross the cores.", "text-rose-400"); return; }
+
+            const visited = new Set(), regions = [], pathSet = new Set(userPath), voidSet = new Set(currentLevelData.voids);
+            for (let r = 1; r <= currentLevelData.size; r++) {
+                for (let c = 1; c <= currentLevelData.size; c++) {
+                    const id = `${r}.${c}`;
+                    if (!pathSet.has(id) && !voidSet.has(id) && !visited.has(id)) {
+                        const currentReg = [], stack = [id]; visited.add(id);
+                        while (stack.length > 0) {
+                            const curr = stack.pop(), [cr, cc] = curr.split('.').map(Number);
+                            currentReg.push(curr);
+                            [[0,1],[0,-1],[1,0],[-1,0]].forEach(([dr, dc]) => {
+                                const nr = cr+dr, nc = cc+dc, nid = `${nr}.${nc}`;
+                                if (nr >= 1 && nr <= currentLevelData.size && nc >= 1 && nc <= currentLevelData.size && !pathSet.has(nid) && !voidSet.has(nid) && !visited.has(nid)) {
+                                    visited.add(nid); stack.push(nid);
+                                }
+                            });
+                        }
+                        regions.push(currentReg);
+                    }
+                }
+            }
+            const dist = regions.map(reg => currentLevelData.cores.filter(c => reg.includes(c.pos)));
+            if (dist.every(d => d.length === 1) && regions.length >= currentLevelData.cores.length) {
+                isComplete = true; stopTimer();
+                const totalDuration = document.getElementById('timer-display').innerText;
+                updateMsg(`HARMONY ACHIEVED IN ${totalDuration}!`, "text-emerald-400 font-black");
+                gridEl.classList.add('win-state');
+                
+                // Hide Controls on Win
+                clueBtn.classList.add('hidden');
+                resetBtn.classList.add('hidden');
+                shareBtn.classList.remove('hidden');
+                
+                regions.forEach((reg, idx) => { reg.forEach(id => {
+                    const cell = document.querySelector(`.cell[data-id="${id}"]`), div = document.createElement('div');
+                    div.className = `region-overlay region-${idx % 4}`; cell.appendChild(div);
+                }); });
+            } else { updateMsg("Synchronization failed. Check partitions.", "text-rose-400"); }
+        }
+
+        // --- FEATURES ---
+        function shareResults() {
+            const date = document.getElementById('date-display').innerText;
+            const duration = document.getElementById('timer-display').innerText;
+            const size = currentLevelData.size;
+            const text = `Aetheric Flux - ${date}\nSynchronized in ${duration} (${size}x${size})\n#AethericFlux`;
+            
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                updateMsg("Copied to clipboard!", "text-emerald-400");
+            } catch (err) {
+                updateMsg("Copy failed.", "text-rose-400");
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function toggleTutorial() { 
+            const m = document.getElementById('tutorial-modal'); 
+            m.style.display = m.style.display === 'flex' ? 'none' : 'flex'; 
+        }
+        
+        function triggerClue() {
+            if (clueCount <= 0 || isComplete) return;
+            clueCount--; clueBtn.innerText = `Clue (${clueCount}/3)`;
+            if (clueCount === 0) { clueBtn.disabled = true; clueBtn.classList.add('opacity-50'); }
+            const sol = currentLevelData.solution;
+            if (clueCount === 2) updateMsg(`Goal: Exactly ${currentLevelData.cores.length} regions.`, "text-indigo-400");
+            else if (clueCount === 1) updateMsg(`Instinct: The path crosses ${sol[Math.floor(sol.length / 2)]}.`, "text-indigo-400");
+            else updateMsg(`Guidance: Start by moving towards ${sol[2] || sol[1]}.`, "text-indigo-400");
+        }
+
+        function resetCurrentPath() { 
+            if (isComplete) return; 
+            userPath = []; 
+            drawPath(); 
+            updateMsg(`Restarting from ${currentLevelData.start}...`); 
+        }
+
+        function updateMsg(txt, cls = "") { 
+            msgEl.innerText = txt; 
+            msgEl.className = `px-10 py-4 rounded-3xl bg-slate-900 border border-slate-800 text-xs font-bold shadow-2xl min-w-[320px] text-center tracking-widest uppercase transition-all ${cls}`; 
+        }
+
+        window.onload = () => {
+            initDaily();
+            // Tutorial auto-open removed as requested
+        };
+    </script>
+</body>
+</html>
