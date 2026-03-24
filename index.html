@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Aetheric Flux - Daily Challenge</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=JetBrains+Mono&display=swap" rel="stylesheet">
@@ -59,9 +59,9 @@
 
         .grid-container {
             display: grid;
-            gap: 4px;
+            gap: clamp(2px, 1vw, 4px); /* Dinamis menyesuaikan layar */
             background-color: var(--grid-border);
-            padding: 6px;
+            padding: clamp(4px, 1.5vw, 6px);
             border-radius: 16px;
             user-select: none;
             box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6);
@@ -78,7 +78,7 @@
             position: relative;
             cursor: pointer;
             transition: background-color 0.2s ease, transform 0.1s ease;
-            border-radius: 6px;
+            border-radius: clamp(3px, 1vw, 6px);
             border: 1px solid var(--cell-border);
         }
 
@@ -93,7 +93,18 @@
         .cell.end { border: 3px solid #f472b6; }
         
         .cell.void { background-color: #000; pointer-events: none; opacity: 0.8; }
-        .cell.void::after { content: '×'; color: #ef4444; font-size: 14px; font-weight: bold; }
+        .cell.void::after { content: '×'; color: #ef4444; font-size: clamp(12px, 3vw, 14px); font-weight: bold; }
+
+        /* Visual Clue Glow Effect */
+        .cell.visual-clue:not(.path) {
+            animation: clue-pulse 1.5s infinite alternate;
+            border: 2px dashed var(--accent);
+            z-index: 8;
+        }
+        @keyframes clue-pulse {
+            0% { box-shadow: inset 0 0 5px var(--accent); background-color: transparent; }
+            100% { box-shadow: inset 0 0 25px var(--accent); background-color: rgba(56, 189, 248, 0.15); }
+        }
 
         .core { width: 45%; height: 45%; border-radius: 50%; z-index: 5; }
         .core-y { background-color: var(--core-y); box-shadow: 0 0 15px var(--core-y); }
@@ -151,15 +162,16 @@
 
         .mode-badge {
             cursor: pointer;
-            padding: 3px 14px;
+            padding: 3px 12px;
             border-radius: 9999px;
-            font-size: 10px;
+            font-size: clamp(9px, 2vw, 10px);
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 0.12em;
             color: white;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             user-select: none;
+            white-space: nowrap;
         }
         .mode-badge.daily {
             background: linear-gradient(135deg, #0ea5e9, #6366f1);
@@ -175,39 +187,40 @@
             background: rgba(148, 163, 184, 0.1);
             border: 1px solid rgba(148, 163, 184, 0.2);
             color: var(--text-main);
-            padding: 2px 12px;
+            padding: 2px 10px;
             border-radius: 9999px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
+            font-size: clamp(9px, 2vw, 10px);
             letter-spacing: 0.05em;
             font-weight: 700;
+            white-space: nowrap;
         }
 
         .archive-nav {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: clamp(4px, 2vw, 10px);
             color: var(--text-dim);
-            font-size: 11px;
+            font-size: clamp(10px, 2.5vw, 11px);
             font-weight: 700;
             font-family: 'JetBrains Mono', monospace;
             background: var(--bg-card);
-            padding: 4px 12px;
+            padding: 4px 10px;
             border-radius: 12px;
             border: 1px solid var(--grid-border);
+            white-space: nowrap;
         }
 
         .nav-btn {
-            @apply p-1.5 rounded-lg hover:bg-slate-800 transition-all active:scale-90 disabled:opacity-20 disabled:pointer-events-none;
+            @apply p-1 md:p-1.5 rounded-lg hover:bg-slate-800 transition-all active:scale-90 disabled:opacity-20 disabled:pointer-events-none;
         }
 
         .btn-base {
-            @apply px-8 py-3.5 rounded-xl text-[11px] font-black uppercase tracking-[0.18em] transition-all active:scale-95 shadow-lg;
+            @apply px-6 py-3 md:px-8 md:py-3.5 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-[0.18em] transition-all active:scale-95 shadow-lg;
         }
 
         .btn-primary { @apply btn-base bg-slate-800 border border-slate-700 text-white hover:bg-slate-700; }
         .btn-indigo { @apply btn-base bg-indigo-900/30 border border-indigo-500/50 text-indigo-400 hover:bg-indigo-900/50; }
-        .btn-emerald { @apply btn-base bg-emerald-500 border border-emerald-400 text-white hover:bg-emerald-400; }
         
         h1 { letter-spacing: -0.05em; transition: color 0.4s ease; }
 
@@ -227,7 +240,7 @@
         .cal-day.disabled { opacity: 0.15; cursor: not-allowed; }
     </style>
 </head>
-<body class="p-4 flex flex-col items-center justify-start min-h-screen">
+<body class="p-4 md:p-6 flex flex-col items-center justify-start min-h-screen overflow-x-hidden">
 
     <div id="sync-overlay">
         <div class="loading-pulse mb-4"></div>
@@ -235,78 +248,104 @@
     </div>
 
     <!-- Top Nav -->
-    <div class="max-w-5xl w-full flex justify-between items-center mb-6">
+    <div class="max-w-5xl w-full flex justify-between items-center mb-4 md:mb-6">
         <div class="flex gap-2">
             <button onclick="toggleTutorial()" class="p-2.5 rounded-xl bg-slate-800/50 border border-slate-700 hover:bg-slate-700 transition-all text-slate-300" title="How to Play">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             </button>
         </div>
         <button onclick="toggleTheme()" class="p-2.5 rounded-xl bg-slate-800/50 border border-slate-700 hover:bg-slate-700 transition-all text-slate-300" title="Toggle Theme">
-            <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+            <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
         </button>
     </div>
 
     <!-- Header -->
-    <div class="max-w-md w-full text-center mb-10">
-        <div class="flex flex-col items-center gap-5 mb-5">
-            <div class="flex items-center justify-center gap-4">
+    <div class="w-full max-w-md text-center mb-6 md:mb-10 px-2">
+        <div class="flex flex-col items-center gap-3 md:gap-5 mb-4 md:mb-5">
+            <div class="flex items-center justify-center gap-2 md:gap-4 flex-wrap">
                 <button id="mode-toggle-btn" onclick="toggleGameMode()" class="mode-badge daily">Daily Flux</button>
                 <div class="archive-nav">
-                    <button id="prev-day" onclick="changeDay(-1)" class="nav-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></button>
-                    <div class="flex items-center gap-2 cursor-pointer hover:text-sky-400 px-2" onclick="toggleCalendarModal()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <button id="prev-day" onclick="changeDay(-1)" class="nav-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></button>
+                    <div class="flex items-center gap-1.5 md:gap-2 cursor-pointer hover:text-sky-400 px-1 md:px-2" onclick="toggleCalendarModal()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                         <span id="date-display">--.--.----</span>
                     </div>
-                    <button id="next-day" onclick="changeDay(1)" class="nav-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg></button>
+                    <button id="next-day" onclick="changeDay(1)" class="nav-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg></button>
                 </div>
                 <span id="timer-display" class="timer-badge">00:00</span>
             </div>
         </div>
-        <h1 id="main-title" class="text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500 mb-4 tracking-tighter">AETHERIC FLUX</h1>
-        <p id="subtitle" class="text-[10px] font-bold italic opacity-70 uppercase leading-relaxed text-center px-6">"One Matrix, One Harmony. Let's Synchronize Today's Mind."</p>
+        <h1 id="main-title" class="text-4xl md:text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500 mb-2 md:mb-4 tracking-tighter">AETHERIC FLUX</h1>
+        <p id="subtitle" class="text-[9px] md:text-[10px] font-bold italic opacity-70 uppercase leading-relaxed text-center px-4">"One Matrix, One Harmony. Let's Synchronize Today's Mind."</p>
     </div>
 
     <!-- Grid Area -->
     <div id="game-grid" class="grid-container w-full max-w-[440px]"></div>
 
     <!-- Gameplay Messages -->
-    <div class="mt-12 flex flex-col items-center w-full">
-        <div id="message" class="px-10 py-5 rounded-3xl text-xs font-bold shadow-2xl min-w-[340px] text-center tracking-[0.15em] uppercase transition-all">Calibrating...</div>
-        <div class="mt-10 flex flex-wrap justify-center gap-6">
+    <div class="mt-8 md:mt-12 flex flex-col items-center w-full px-4">
+        <div id="message" class="w-full max-w-[340px] px-6 py-4 md:px-10 md:py-5 rounded-3xl text-[10px] md:text-xs font-bold shadow-2xl text-center tracking-widest uppercase transition-all">Calibrating...</div>
+        <div class="mt-6 md:mt-10 flex flex-wrap justify-center gap-4 md:gap-6">
             <button id="reset-btn" onclick="resetCurrentPath()" class="btn-primary">Reset Path</button>
             <button id="clue-btn" onclick="triggerClue()" class="btn-indigo">Clue (3/3)</button>
-            <button id="share-btn" onclick="shareResults()" class="btn-emerald hidden">Share Results</button>
+        </div>
+    </div>
+
+    <!-- Win Modal (Pop up) -->
+    <div id="win-modal" class="modal">
+        <div class="bg-slate-900 border border-slate-700 p-8 md:p-10 rounded-[2.5rem] max-w-sm w-full shadow-2xl text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-sky-400"></div>
+            <h2 class="text-3xl font-black text-white mb-2 uppercase tracking-tighter">HARMONY ACHIEVED</h2>
+            <p id="win-time" class="text-sky-400 font-mono text-xl font-bold mb-4">00:00</p>
+            
+            <div id="win-flawless" class="hidden mb-6 flex justify-center">
+                <div class="bg-orange-500/20 border border-orange-500/50 text-orange-400 px-4 py-1.5 rounded-full text-xs font-black tracking-widest uppercase flex items-center gap-2 shadow-[0_0_15px_rgba(249,115,22,0.3)]">
+                    Flawless 🔥
+                </div>
+            </div>
+            
+            <p class="text-slate-400 text-xs font-medium leading-relaxed mb-8 px-2">
+                The aetheric medium has been perfectly synchronized.
+            </p>
+            <div class="flex flex-col gap-3">
+                <button id="modal-share-btn" onclick="shareResults()" class="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] transition-all shadow-lg shadow-emerald-900/20">
+                    Share Results
+                </button>
+                <button onclick="toggleWinModal()" class="w-full py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-2xl font-bold uppercase text-xs tracking-[0.2em] transition-all">
+                    Close
+                </button>
+            </div>
         </div>
     </div>
 
     <!-- Calendar Modal Premium -->
     <div id="calendar-modal" class="modal">
-        <div class="bg-[#0f172a] border border-slate-800 p-8 rounded-[2rem] max-w-[340px] w-full shadow-2xl">
-            <div class="flex justify-between items-center mb-8 px-1">
-                <h3 id="cal-month-year" class="text-sky-400 font-black tracking-tight text-xl uppercase"></h3>
+        <div class="bg-[#0f172a] border border-slate-800 p-6 md:p-8 rounded-[2rem] max-w-[340px] w-full shadow-2xl">
+            <div class="flex justify-between items-center mb-6 md:mb-8 px-1">
+                <h3 id="cal-month-year" class="text-sky-400 font-black tracking-tight text-lg md:text-xl uppercase"></h3>
                 <div class="flex gap-2">
                     <button onclick="navCalendar(-1)" class="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 transition-all"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></button>
                     <button onclick="navCalendar(1)" class="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 transition-all"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg></button>
                 </div>
             </div>
-            <div class="grid grid-cols-7 gap-2 text-center mb-5 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+            <div class="grid grid-cols-7 gap-2 text-center mb-4 md:mb-5 text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest">
                 <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
             </div>
             <div id="cal-days" class="cal-grid"></div>
-            <button onclick="toggleCalendarModal()" class="mt-8 w-full py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-2xl font-bold uppercase text-xs tracking-[0.2em] transition-all">Close</button>
+            <button onclick="toggleCalendarModal()" class="mt-6 md:mt-8 w-full py-3.5 md:py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-2xl font-bold uppercase text-[10px] md:text-xs tracking-[0.2em] transition-all">Close</button>
         </div>
     </div>
 
     <!-- Tutorial Modal -->
     <div id="tutorial-modal" class="modal">
-        <div class="bg-slate-900 border border-slate-700 p-10 rounded-[2.5rem] max-w-sm w-full shadow-2xl text-center">
-            <h2 class="text-3xl font-black text-sky-400 mb-6 uppercase text-center">HOW TO PLAY</h2>
-            <div class="space-y-5 text-slate-400 text-sm leading-relaxed text-left">
+        <div class="bg-slate-900 border border-slate-700 p-8 md:p-10 rounded-[2.5rem] max-w-sm w-full shadow-2xl text-center">
+            <h2 class="text-2xl md:text-3xl font-black text-sky-400 mb-6 uppercase text-center">HOW TO PLAY</h2>
+            <div class="space-y-4 md:space-y-5 text-slate-400 text-xs md:text-sm leading-relaxed text-left">
                 <p><span class="text-emerald-400 font-bold">1. Start & End:</span> Connect the <span class="text-emerald-400">Green outline</span> to the <span class="text-pink-400">Pink outline</span>.</p>
                 <p><span class="text-sky-400 font-bold">2. The Barrier:</span> Your blue path is a wall. It must divide the grid into separate rooms.</p>
                 <p><span class="text-amber-400 font-bold">3. Harmony:</span> Every energy sphere must be isolated in its own private room. Empty rooms are allowed, but if two spheres share the same room, the circuit fails.</p>
             </div>
-            <button onclick="toggleTutorial()" class="mt-10 w-full py-4 bg-sky-600 text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em]">Understood</button>
+            <button onclick="toggleTutorial()" class="mt-8 md:mt-10 w-full py-3.5 md:py-4 bg-sky-600 text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em]">Understood</button>
         </div>
     </div>
 
@@ -317,6 +356,7 @@
         launchDate.setHours(0,0,0,0);
         
         let autoSolveInProgress = false;
+        let attemptCount = 0; 
 
         function showLoading() { document.getElementById('sync-overlay').style.display = 'flex'; }
         function hideLoading() { document.getElementById('sync-overlay').style.display = 'none'; }
@@ -338,11 +378,11 @@
                 const btn = document.getElementById('mode-toggle-btn'), body = document.body, title = document.getElementById('main-title'), sub = document.getElementById('subtitle');
                 if (currentMode === 'singularity') {
                     btn.innerText = 'Singularity Flux'; btn.className = 'mode-badge singularity'; body.classList.add('singularity-mode');
-                    title.innerText = 'SINGULARITY'; title.className = 'text-6xl font-black bg-clip-text text-transparent bg-gradient-to-br from-red-500 via-purple-600 to-indigo-600 mb-4 tracking-tighter';
+                    title.innerText = 'SINGULARITY'; title.className = 'text-4xl md:text-6xl font-black bg-clip-text text-transparent bg-gradient-to-br from-red-500 via-purple-600 to-indigo-600 mb-2 md:mb-4 tracking-tighter';
                     sub.innerText = '"Beyond Limits. Beyond Harmony. Face the Ultimate Flux."';
                 } else {
                     btn.innerText = 'Daily Flux'; btn.className = 'mode-badge daily'; body.classList.remove('singularity-mode');
-                    title.innerText = 'AETHERIC FLUX'; title.className = 'text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500 mb-4 tracking-tighter';
+                    title.innerText = 'AETHERIC FLUX'; title.className = 'text-4xl md:text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500 mb-2 md:mb-4 tracking-tighter';
                     sub.innerText = '"One Matrix, One Harmony. Let\'s Synchronize Today\'s Mind."';
                 }
                 initDaily();
@@ -351,6 +391,7 @@
         }
 
         function toggleCalendarModal() { const m = document.getElementById('calendar-modal'); m.style.display = m.style.display === 'flex' ? 'none' : 'flex'; if(m.style.display==='flex') { calViewDate = new Date(viewDate); renderCalendar(); } }
+        function toggleWinModal() { const m = document.getElementById('win-modal'); m.style.display = m.style.display === 'flex' ? 'none' : 'flex'; }
         function navCalendar(o) { calViewDate.setMonth(calViewDate.getMonth() + o); renderCalendar(); }
         
         function renderCalendar() {
@@ -427,7 +468,7 @@
         }
 
         let currentLevelData = null, userPath = [], isDrawing = false, isComplete = false, clueCount = 3;
-        const gridEl = document.getElementById('game-grid'), msgEl = document.getElementById('message'), clueBtn = document.getElementById('clue-btn'), shareBtn = document.getElementById('share-btn'), resetBtn = document.getElementById('reset-btn');
+        const gridEl = document.getElementById('game-grid'), msgEl = document.getElementById('message'), clueBtn = document.getElementById('clue-btn'), resetBtn = document.getElementById('reset-btn');
 
         function getPartitionStatus(p, size, voids, cores) {
             const pathSet = new Set(p), voidSet = new Set(voids), visited = new Set(), regions = [];
@@ -513,6 +554,7 @@
         async function triggerAutoSolve() {
             if (!currentLevelData || !currentLevelData.solution || autoSolveInProgress) return;
             autoSolveInProgress = true;
+            attemptCount = 99; // Mengugurkan status flawless
             isDrawing = false; isComplete = false; userPath = []; gridEl.classList.remove('win-state');
             for (let step of currentLevelData.solution) {
                 if (!autoSolveInProgress) break; 
@@ -533,10 +575,11 @@
 
         function initDaily() {
             autoSolveInProgress = false;
+            attemptCount = 0; // Reset Flawless tracker
             seededRand = mulberry32(getSeedForDate(viewDate)); currentLevelData = generateLevel();
             userPath = []; isDrawing = false; isComplete = false; clueCount = 3;
             clueBtn.innerText = `Clue (3/3)`; clueBtn.disabled = false; clueBtn.classList.remove('opacity-50', 'hidden');
-            resetBtn.classList.remove('hidden'); shareBtn.classList.add('hidden');
+            resetBtn.classList.remove('hidden'); 
             gridEl.style.gridTemplateColumns = `repeat(${currentLevelData.size}, 1fr)`;
             gridEl.innerHTML = ''; gridEl.classList.remove('win-state');
             for (let r = 1; r <= currentLevelData.size; r++) { for (let c = 1; c <= currentLevelData.size; c++) {
@@ -562,11 +605,22 @@
         window.addEventListener('mouseup', () => { if(isDrawing && !autoSolveInProgress) { isDrawing = false; validate(); } });
         window.addEventListener('touchend', () => { if(isDrawing && !autoSolveInProgress) { isDrawing = false; validate(); } });
 
-        function drawPath() { document.querySelectorAll('.cell').forEach(c => {
-            c.classList.toggle('path', userPath.includes(c.dataset.id)); const overlay = c.querySelector('.region-overlay'); if (overlay) overlay.remove();
-        }); }
+        function drawPath() { 
+            // Only toggle visual paths, do not wipe out .visual-clue 
+            document.querySelectorAll('.cell').forEach(c => {
+                c.classList.toggle('path', userPath.includes(c.dataset.id)); 
+                const overlay = c.querySelector('.region-overlay'); if (overlay) overlay.remove();
+            }); 
+        }
 
         function validate() {
+            if (userPath.length <= 1) {
+                userPath = []; drawPath(); // Batalkan klik tidak sengaja (1 cell) tanpa menghitung attempt
+                return;
+            }
+
+            attemptCount++; // Garis telah ditarik penuh dan dilepas, ini adalah 1 attempt
+
             if (userPath[userPath.length-1] !== currentLevelData.end) { updateMsg("Flow incomplete. Reach the target.", "text-rose-500"); return; }
             if (currentLevelData.cores.some(c => userPath.includes(c.pos))) { updateMsg("Anomaly! Do not cross the cores.", "text-rose-500"); return; }
             
@@ -580,10 +634,8 @@
                 updateMsg(`HARMONY ACHIEVED IN ${totalDuration}!`, "text-emerald-500 font-black");
                 gridEl.classList.add('win-state'); 
                 
-                const cBtn = document.getElementById('clue-btn'), rBtn = document.getElementById('reset-btn'), sBtn = document.getElementById('share-btn');
-                if(cBtn) cBtn.classList.add('hidden'); 
-                if(rBtn) rBtn.classList.add('hidden'); 
-                if(sBtn) sBtn.classList.remove('hidden');
+                if(clueBtn) clueBtn.classList.add('hidden'); 
+                if(resetBtn) resetBtn.classList.add('hidden'); 
                 
                 let regionIdx = 0;
                 regions.forEach((reg) => { 
@@ -592,10 +644,23 @@
                         if(cell) {
                             const div = document.createElement('div');
                             div.className = `region-overlay region-${regionIdx % 5}`; cell.appendChild(div);
+                            // Remove visual clues if any
+                            cell.classList.remove('visual-clue');
                         }
                     }); 
                     regionIdx++;
                 });
+
+                // Menyalakan Win Modal dengan informasi Flawless jika 1x attempt
+                document.getElementById('win-time').innerText = totalDuration;
+                const flawlessBadge = document.getElementById('win-flawless');
+                if (attemptCount === 1) {
+                    flawlessBadge.classList.remove('hidden');
+                } else {
+                    flawlessBadge.classList.add('hidden');
+                }
+                setTimeout(() => toggleWinModal(), 500);
+
             } else { 
                 const multiCores = coreDistribution.some(d => d.length > 1);
                 updateMsg(multiCores ? "Conflict: Multiple cores in one room!" : "Incomplete: Spheres must be isolated!", "text-rose-500"); 
@@ -603,10 +668,22 @@
         }
 
         function shareResults() {
-            const date = document.getElementById('date-display').innerText, duration = document.getElementById('timer-display').innerText, mode = currentMode.toUpperCase();
-            const text = `Aetheric Flux - ${mode}\nDate: ${date}\nSynchronized in ${duration}\n#AethericFlux`;
+            const date = document.getElementById('date-display').innerText;
+            const duration = document.getElementById('win-time').innerText;
+            const mode = currentMode.toUpperCase();
+            const flawlessText = attemptCount === 1 ? " - Flawless 🔥" : "";
+            const text = `Aetheric Flux - ${mode}\nDate: ${date}\nSynchronized in ${duration}${flawlessText}\n#AethericFlux`;
+            
             const textArea = document.createElement("textarea"); textArea.value = text; document.body.appendChild(textArea); textArea.select();
-            try { document.execCommand('copy'); updateMsg("COPIED TO CLIPBOARD!", "text-emerald-500"); } catch (err) { updateMsg("COPY FAILED.", "text-rose-500"); }
+            try { 
+                document.execCommand('copy'); 
+                const btn = document.getElementById('modal-share-btn');
+                const oldText = btn.innerText;
+                btn.innerText = "COPIED TO CLIPBOARD!";
+                setTimeout(() => { btn.innerText = "Share Results"; }, 2000);
+            } catch (err) { 
+                alert("Copy failed."); 
+            }
             document.body.removeChild(textArea);
         }
 
@@ -616,20 +693,36 @@
             if (clueCount <= 0 || isComplete) return;
             clueCount--; clueBtn.innerText = `Clue (${clueCount}/3)`; if (clueCount === 0) { clueBtn.disabled = true; clueBtn.classList.add('opacity-50'); }
             
-            if (clueCount === 2) updateMsg(`Strategy: Your path must act as a wall to separate the colors.`, "text-indigo-400");
-            else if (clueCount === 1) updateMsg(`Tip: Empty rooms are fine. Just keep different colors apart!`, "text-indigo-400");
-            else updateMsg(`Hint: Ensure the flow securely connects the Green and Pink outlines.`, "text-indigo-400");
+            const sol = currentLevelData.solution;
+            if (!sol || sol.length < 3) return;
+
+            if (clueCount === 2) {
+                const idx = Math.floor(sol.length * 0.33);
+                const cell = document.querySelector(`.cell[data-id="${sol[idx]}"]`);
+                if (cell) cell.classList.add('visual-clue');
+                updateMsg(`RESONANCE DETECTED. PATH MUST CROSS THE HIGHLIGHTED SECTOR.`, "text-indigo-400");
+            }
+            else if (clueCount === 1) {
+                const idx = Math.floor(sol.length * 0.66);
+                const cell = document.querySelector(`.cell[data-id="${sol[idx]}"]`);
+                if (cell) cell.classList.add('visual-clue');
+                updateMsg(`SECOND RESONANCE FOUND. CONNECT THE HIGHLIGHTED SECTORS.`, "text-indigo-400");
+            }
+            else if (clueCount === 0) {
+                updateMsg(`TOTAL FLOW LENGTH REQUIRED: ${sol.length} CELLS.`, "text-indigo-400");
+            }
         }
         
         function resetCurrentPath() { 
             autoSolveInProgress = false;
             if (isComplete) return; 
+            if (userPath.length > 0) attemptCount++; // Mereset garis yang belum selesai dihitung sebagai 1 percobaan
             userPath = []; drawPath(); updateMsg(`RESTARTING CALIBRATION...`, ''); 
         }
 
         function updateMsg(txt, cls = "") { 
             msgEl.innerText = txt; 
-            msgEl.className = `px-10 py-5 rounded-3xl text-xs font-bold shadow-2xl min-w-[320px] text-center tracking-widest uppercase transition-all ${cls}`; 
+            msgEl.className = `w-full max-w-[340px] px-6 py-4 md:px-10 md:py-5 rounded-3xl text-[10px] md:text-xs font-bold shadow-2xl text-center tracking-widest uppercase transition-all ${cls}`; 
         }
 
         window.onload = () => {
